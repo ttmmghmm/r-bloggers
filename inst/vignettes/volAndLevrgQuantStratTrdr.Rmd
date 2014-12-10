@@ -1,0 +1,96 @@
+---
+title: "volatilityAndLeverage.Rmd"
+author: "me"
+date: "12/10/2014"
+output: html_document
+---
+
+## <http://quantstrattrader.wordpress.com/2014/11/03/seeking-volatility-and-leverage/>
+
+```{r}
+
+require(quantmod)
+require(PerformanceAnalytics)
+require(downloader)
+
+getSymbols("SPXL", from="1990-01-01")
+spxlRets <- Return.calculate(Ad(SPXL)) #have to use adjusted due to split
+getSymbols("SPY", from="1990-01-01")
+SPYrets <- Return.calculate(Ad(SPY))
+spxl3SPY <- merge(spxlRets, 3*SPYrets, join='inner')
+
+charts.PerformanceSummary(spxl3SPY)
+
+getSymbols("TMF", from="1990-01-01")
+TMFrets <- Return.calculate(Ad(TMF))
+getSymbols("TLT", from="1990-01-01")
+TLTrets <- Return.calculate(Ad(TLT))
+tmf3TLT <- merge(TMFrets, 3*TLTrets, join='inner')
+charts.PerformanceSummary(tmf3TLT)
+
+Return.annualized(tmf3TLT[,2]-tmf3TLT[,1])
+```
+
+
+```{r}
+discrepancy <- as.numeric(Return.annualized(tmf3TLT[,2]-tmf3TLT[,1]))
+tmf3TLT[,2] <- tmf3TLT[,2] - ((1+discrepancy)^(1/252)-1)
+charts.PerformanceSummary(tmf3TLT)
+```
+
+## save those modified TLT returns (our synthetic TMF):
+```{r}
+modifiedTLT <- 3*TLTrets - ((1+discrepancy)^(1/252)-1)
+```
+
+## VXX 
+compare Mr. Vollmeier’s data to Yahoo’s return data so that we can verify if two separate return streams check out.
+
+```{r}
+#get long VXX -- thank you so much, Mr. Helmuth Vollmeier
+library(downloader)
+download("https://dl.dropboxusercontent.com/s/950x55x7jtm9x2q/VXXlong.TXT", 
+         destfile="longVXX.txt") #requires downloader package
+VXXlong <- read.csv("longVXX.txt", stringsAsFactors=FALSE)
+VXXlong <- xts(VXXlong[,2:5], order.by=as.Date(VXXlong$Date))
+VXXrets <- Return.calculate(Cl(VXXlong)) #long data only has close
+ 
+getSymbols("VXX", from="1990-01-01")
+vxxYhooRets <- Return.calculate(Ad(VXX))
+vxx2source <- merge(VXXrets, vxxYhooRets, join='inner')
+charts.PerformanceSummary(vxx2source) #identical
+```
+
+## recreate the equity curve of the first strategy
+
+```{r}
+# 50% SPXL, 45% TMF, and 5% VXX.
+rSPY_TLT_VXX <- cbind(3*SPYrets, modifiedTLT, VXXrets)
+rSPY_TLT_VXX <- rSPY_TLT_VXX[!is.na(rSPY_TLT_VXX[,3]),]
+colnames(rSPY_TLT_VXX) <- c("SPY", "TLT", "VXX")
+ 
+strat <- Return.rebalancing(R = rSPY_TLT_VXX, weights = c(.5, .45, .05), 
+                            rebalance_on = "years", geometric=TRUE)
+stratAndSPY <- merge(strat, SPYrets, join='inner')
+charts.PerformanceSummary(stratAndSPY["2009-04-16::"])
+
+```
+* One other note, on a purely mechanical issue: when using the
+\eqn{geometric = TRUE}
+argument with R, when creating synthetic leverage, you cannot create it in the actual weights argument, or it will leverage your capital at every rebalancing period, giving you obviously incorrect results.
+
+
+esults were achieved using geometric = TRUE in two places: one in the Return.rebalancing argument (which implies reinvesting the capital), and then once again when calling the PerformanceAnalytics functions. Essentially, the implication of this is reinvesting all gains at the rebalancing period, and not touching any position no matter what. Used inappropriately, this will create results that border on the optimistic.
+
+```{r}
+Return.annualized(stratAndSPY)
+#                   portfolio.returns SPY.Adjusted
+# Annualized Return         0.2305339   0.07937642
+maxDrawdown(stratAndSPY)
+#                portfolio.returns SPY.Adjusted
+# Worst Drawdown         0.4901882    0.5518672
+SharpeRatio.annualized(stratAndSPY)
+#                                 portfolio.returns SPY.Adjusted
+# Annualized Sharpe Ratio (Rf=0%)         0.9487574    0.3981902
+```
+
