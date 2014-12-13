@@ -1,0 +1,346 @@
+---
+title: "Pairs trading strategy using a spread from Financial Instrument package"
+author: "http://article.gmane.org/gmane.comp.lang.r.finance/12931"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+Based on a Notional Spread and Standard Devations from the rolling mean
+* Create a pairs trading strategy using a spread from Financial Instrument package.
+
+```{boilerplate-r}
+opts_chunk$set(eval=FALSE)
+# opts_chunk$set(echo=FALSE, fig.path='myproject/plot-', cache=TRUE)
+require(quantstrat)
+require(Quandl)
+require(quantmod)
+```
+
+a spread to generate signals and rules but then execute individually on the underlying
+
+## Data Prep
+### get data from Quandl
+```{r get data from Quandl}
+symb1 <- Quandl("CHRIS/CME_ES1", type = "xts", trim_start="2010-01-01", trim_end="2014-11-17")
+symb2 <- Quandl("CHRIS/CME_YM1", type = "xts", trim_start="2010-01-01", trim_end="2014-11-17")
+```
+Trim and Format  - Using settlement as Close value
+
+```{r Trim and Format Using settlement as Close value}
+symb1 <- symb1[,c(1,2,3,6)]
+symb2 <- symb2[,c(1,2,3,6)]
+
+colnames(symb1) <- c("Open", "High", "Low", "Close")
+colnames(symb2) <- c("Open", "High", "Low", "Close")
+
+# Clean data so only dates where both trades exist merge <- cbind(symb1, symb2) 
+dates <- index(merge[complete.cases(merge),])
+symb1<- symb1[dates]
+symb2<- symb2[dates]
+
+# -----------------------STRATEGY-------------------
+
+```
+
+```{r, eval = FALSE}
+# -----------------------STRATEGY-------------------
+#clean variables for reruns
+suppressWarnings(rm("order_book.bbands",pos=.strategy))
+suppressWarnings(rm("account.bbands","portfolio.bbands",pos=.blotter))
+suppressWarnings(rm("account.st","portfolio.st","stock.str","stratBBands","initDate","initEq",'start_t','end_t'))
+
+#Initial values / parameters
+initDate= index(symb1)[1]-1
+initEq=100000
+
+SD = 2 # how many standard deviations
+N = 20 # length of moving average
+
+#Initialize FinancialInstrument Objects
+
+currency('USD')
+
+future( primary_id = "symb1",
+        currency = "USD",
+        tick_size = .25,
+        multiplier = 50)
+
+future( primary_id = "symb2",
+        currency = "USD",
+        tick_size = 1,
+        multiplier = 5)
+
+#Create Spread Series
+calcRatio <- function(x) {
+  #returns the ratio of notional close prices for 2 symbols
+  x1 <- get(x[1])
+  x2 <- get(x[2])
+  mult1 <- getInstrument(x[1])$multiplier
+  mult2 <- getInstrument(x[2])$multiplier
+  rat.Op <- ((mult1 * Op(x1))) / (mult2 * Op(x2))
+  rat.Hi <- ((mult1 * Hi(x1))) / (mult2 * Hi(x2))
+  rat.Lo <- ((mult1 * Lo(x1))) / (mult2 * Lo(x2))
+  rat.Cl <- ((mult1 * Cl(x1))) / (mult2 * Cl(x2))
+  ratio <- cbind(rat.Op, rat.Hi, rat.Lo, rat.Cl)
+  colnames(ratio) <- c("Open", "High", "Low", "Close")
+  return(ratio)
+}
+
+Ratio <- calcRatio(c("symb1", "symb2"))
+
+#Initialize Spread (using notional ratio as hedge ratio) spread(primary_id = "symb1.symb2",
+       currency = "USD",
+       members = c("symb1", "symb2"),
+       memberratio = list(1, as.numeric(-Cl(Ratio))) )
+
+#Notional Ratio is also spread for trading
+symb1.symb2 <- Ratio
+
+#name strings
+portfolio.st = 'bbands'
+account.st = 'bbands'
+
+#initialization of strategy objects ---- initPortf(portfolio.st, #portfolio Initiatlization
+          symbols = c("symb1.symb2", "symb1", "symb2"),
+          initDate = initDate,
+          currency = "USD",
+          initPosQty = 0)
+
+initAcct(account.st, #account initialization
+         portfolios = portfolio.st,
+         initDate = initDate,
+         initEq = initEq)
+
+initOrders(portfolio = portfolio.st, #orders initialize
+           initDate = initDate)
+
+addPosLimit( portfolio = portfolio.st, # add position limit rules
+             symbol = 'symb1.symb2',
+             timestamp = initDate,
+             maxpos = 1,
+             longlevels = 1,
+             minpos = -1)
+
+addPosLimit( portfolio = portfolio.st, # add position limit rules
+             symbol = 'symb1',
+             timestamp = initDate,
+             maxpos = 2,
+             longlevels = 1,
+             minpos = -2)
+
+addPosLimit( portfolio = portfolio.st, # add position limit rules
+             symbol = 'symb2',
+             timestamp = initDate,
+             maxpos = 2,
+             longlevels = 1,
+             minpos = -2)
+
+stratBBands <- strategy("bbands") # strategy object init
+
+# Indicator
+stratBBands <- add.indicator(
+  strategy = stratBBands,
+  name = "BBands",
+  arguments = list(
+    HLC = quote(HLC(mktdata)),
+    n = N,
+    sd = SD,
+    maType = "SMA"),
+  label = "BBands")
+
+# #Indi Debug
+# summary(stratBBands)
+# start_t <- Sys.time()
+# applyIndicators( strategy = stratBBands, mktdata = Ratio) # end_t<-Sys.time() # print("strat execution time:") # print(end_t-start_t)
+
+# Add signals:
+stratBBands <- add.signal(
+  strategy = stratBBands,
+  name = "sigCrossover",
+  arguments = list(
+    columns = c("Close","up.BBands"),
+    relationship = "gt"),
+  label = "Cl.gt.UpperBand")
+
+stratBBands <- add.signal(
+  strategy = stratBBands,
+  name = "sigCrossover",
+  arguments = list(
+    columns = c("Close","dn.BBands"),
+    relationship = "lt"),
+  label = "Cl.lt.LowerBand")
+
+stratBBands <- add.signal(
+  strategy = stratBBands,
+  name = "sigCrossover",
+  arguments = list(
+    columns = c("High","Low", "mavg.BBands"),
+    relationship = "op"),
+  label = "Cross.Mid")
+
+# #Signal Debug
+# summary(stratBBands)
+# start_t <- Sys.time()
+# applySignals(strategy = stratBBands, mktdata = applyIndicators(strategy = stratBBands, mktdata = Ratio)) # end_t<-Sys.time() # print("strat execution time:") # print(end_t-start_t)
+
+# Rules -----
+
+#Entry
+
+stratBBands <- add.rule (
+  strategy = stratBBands,
+  name = "ruleSignal",
+  arguments = list(
+    sigcol = "Cl.gt.UpperBand",
+    sigval = TRUE,
+    orderqty = -1,
+    ordertype = "market",
+    orderside = "short",
+    symbol = "symb1",
+    replace = TRUE,
+    osFUN = osMaxPos),
+  type = "enter",
+  label = "ShortSpread_symb1")
+
+stratBBands <- add.rule (
+  strategy = stratBBands,
+  name = "ruleSignal",
+  arguments = list(
+    sigcol = "Cl.gt.UpperBand",
+    sigval = TRUE,
+    orderqty = 1,
+    ordertype = "market",
+    orderside = "long",
+    symbol = "symb2",
+    replace = TRUE,
+    osFUN = osMaxPos),
+  type = "enter",
+  label = "ShortSpread_symb2")
+
+stratBBands <- add.rule (
+  strategy = stratBBands,
+  name = "ruleSignal",
+  arguments = list(
+    sigcol = "Cl.lt.LowerBand",
+    sigval = TRUE,
+    orderqty = 1,
+    ordertype = "market",
+    orderside = "long"
+    symbol = "symb1",
+    replace = TRUE,
+    osFUN = osMaxPos),
+  type = "enter",
+  label = "LongSpread_symb1")
+
+stratBBands <- add.rule (
+  strategy = stratBBands,
+  name = "ruleSignal",
+  arguments = list(
+    sigcol = "Cl.lt.LowerBand",
+    sigval = TRUE,
+    orderqty = -1,
+    ordertype = "market",
+    orderside = "short",
+    symbol = "symb2",
+    replace = TRUE,
+    osFUN = osMaxPos),
+  type = "enter",
+  label = "LongSpread_symb2")
+
+# Exit
+stratBBands <- add.rule(
+  strategy = stratBBands,
+  name = "ruleSignal",
+  arguments = list(
+    sigcol = "Cross.Mid",
+    sigval = TRUE,
+    orderqty = "all",
+    ordertype = "market",
+    TxnFees = 0,
+    replace = TRUE),
+  type = "exit",
+  label = "Exit")
+
+
+summary(stratBBands)
+
+# Strategy Execution ----
+start_t<-Sys.time()
+out<-try(applyStrategy(strategy=stratBBands ,
+                       portfolios="bbands"))
+end_t<-Sys.time()
+print("strat execution time:")
+print(end_t-start_t)
+
+# update portfolio
+start_t<-Sys.time()
+updatePortf(Portfolio='bbands',Dates=paste('::',as.Date(Sys.time()),sep=''))
+end_t<-Sys.time()
+print("updatePortf execution time:")
+print(end_t-start_t)
+
+#Chart
+chart.Posn(Portfolio='bbands',Symbol="symb1")
+plot(add_BBands(on=1,sd=SD,n=N))
+chart.Posn(Portfolio='bbands',Symbol="symb2")
+plot(add_BBands(on=1,sd=SD,n=N))
+chart.Posn(Portfolio='bbands',Symbol="symb1.symb2")
+plot(add_BBands(on=1,sd=SD,n=N))
+
+#Stats
+book <- getOrderBook("bbands")
+stats <- tradeStats("bbands")
+rets <- PortfReturns("bbands")
+port <- getPortfolio("bbands")
+
+```
+
+- Never uses retina figures
+- Has a smaller default figure size
+- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+
+## Vignette Info
+
+Note the various macros within the `vignette` setion of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+
+## Styles
+
+The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+
+    output: 
+      rmarkdown::html_vignette:
+        css: mystyles.css
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))
