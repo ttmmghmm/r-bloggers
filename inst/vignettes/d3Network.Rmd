@@ -1,0 +1,125 @@
+---
+title: "d3Network"
+author: "me"
+date: "12/15/2014"
+output: html_document
+---
+
+## **<http://christophergandrud.github.io/d3Network/>**
+
+results='asis'. Also set the argument iframe = TRUE and specify a file name with file as before
+
+```{r, results='asis', iframe = TRUE}
+# install.packages("d3Network")
+library(d3Network)
+Source <- c("A", "A", "A", "A", "B", "B", "C", "C", "D")
+Target <- c("B", "C", "D", "J", "E", "F", "G", "H", "I")
+NetworkData <- data.frame(Source, Target)
+d3SimpleNetwork(NetworkData, width = 400, height = 250)
+```
+```{r, results='asis'}
+# , iframe = TRUE}
+d3SimpleNetwork(NetworkData, width = 400, height = 250, 
+                textColour = "orange", linkColour = "red",
+                opacity = 0.9
+#                , file = "html/ExampleGraph9.html"
+                )
+```
+```{r, results='asis', iframe = TRUE}
+library(RCurl)
+# Gather raw JSON formatted data
+URL <- "https://raw.githubusercontent.com/christophergandrud/d3Network/master/JSONdata/miserables.json"
+MisJson <- getURL(URL, ssl.verifypeer = FALSE)
+# Convert JSON arrays into data frames
+MisLinks <- JSONtoDF(jsonStr = MisJson, array = "links")
+MisNodes <- JSONtoDF(jsonStr = MisJson, array = "nodes")
+head(MisLinks)
+d3ForceNetwork(Links = MisLinks, Nodes = MisNodes,
+               Source = "source", Target = "target",
+               Value = "value", NodeID = "name",
+               Group = "group", width = 550, height = 400,
+               opacity = 0.9, file = "html/ExampleGraph10.html")
+```
+```{r, results='asis', iframe = TRUE}
+d3ForceNetwork(Links = MisLinks, Nodes = MisNodes, 
+               Source = "source", Target = "target",
+               Value = "value", NodeID = "name",
+               Group = "group", width = 550, height = 400,
+               opacity = 0.9, zoom = TRUE, file = "html/ExampleGraph11.html")
+```
+```{r, results='asis', iframe = TRUE}
+library(RCurl)
+URL <- "https://raw.githubusercontent.com/christophergandrud/d3Network/master/JSONdata/flare.json"
+Flare <- getURL(URL)
+# Convert to list format
+Flare <- rjson::fromJSON(Flare)
+# Create Graph
+d3Tree(List = Flare, fontsize = 8, diameter = 800, file = "html/ExampleGraph4.html")
+```
+```{r, results='asis', iframe = TRUE, echo = FALSE}
+CanadaPC <- list(name = "Canada",
+children = list(list(name = "Newfoundland",
+children = list(list(name = "St. John's"))),
+list(name = "PEI",
+children = list(list(name = "Charlottetown"))),
+list(name = "Nova Scotia",
+children = list(list(name = "Halifax"))),
+list(name = "New Brunswick",
+children = list(list(name = "Fredericton"))),
+list(name = "Quebec",
+children = list(list(name = "Montreal"),
+list(name = "Quebec City"))),
+list(name = "Ontario",
+children = list(list(name = "Toronto"),
+list(name = "Ottawa"))),
+list(name = "Manitoba",
+children = list(list(name = "Winnipeg"))),
+list(name = "Saskatchewan",
+children = list(list(name = "Regina"))),
+list(name = "Nunavuet",
+children = list(list(name = "Iqaluit"))),
+list(name = "NWT",
+children = list(list(name = "Yellowknife"))),
+list(name = "Alberta",
+children = list(list(name = "Edmonton"))),
+list(name = "British Columbia",
+children = list(list(name = "Victoria"),
+list(name = "Vancouver"))),
+list(name = "Yukon",
+children = list(list(name = "Whitehorse")))
+))
+d3Tree(List = CanadaPC, fontsize = 10, diameter = 500,
+       textColour = "#D95F0E", linkColour = "#FEC44F",
+       nodeColour = "#D95F0E", file = "html/ExampleGraph5.html")
+```
+```{r, results='asis', iframe = TRUE}
+d3ClusterDendro(List = CanadaPC, fontsize = 12,
+                zoom = TRUE, widthCollapse = 0.8, file = "html/ExampleGraph6.html")
+```
+```{r, results='asis', iframe = TRUE}
+library(RCurl)
+URL <- "https://raw.githubusercontent.com/christophergandrud/d3Network/sankey/JSONdata/energy.json"
+Energy <- getURL(URL, ssl.verifypeer = FALSE)
+# Convert to data frame
+EngLinks <- JSONtoDF(jsonStr = Energy, array = "links")
+EngNodes <- JSONtoDF(jsonStr = Energy, array = "nodes")
+# Plot
+d3Sankey(Links = EngLinks, Nodes = EngNodes, Source = "source",
+         Target = "target", Value = "value", NodeID = "name",
+         fontsize = 12, nodeWidth = 30, width = 700, file = "html/ExampleGraph7.html")
+
+```
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r summary}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
