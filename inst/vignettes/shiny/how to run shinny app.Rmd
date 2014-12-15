@@ -33,6 +33,22 @@ runExample("10_download") # file download wizard
 runExample("11_timer") # an automated timer
 ```
 
+```{r but has to be a zip file with nothing else in that folder}
+app2url <- "https://github.com/ttmmghmm/r-bloggers/tree/master/inst/vignettes/shinyapps/App-2"
+runUrl(url = app2url)
+```
+
+```{r}
+# runGitHub( "<your repository name>", "<your user name>") 
+runGitHub( "ttmmghmm/r-bloggers") 
+runGitHub( "ttmmghmm/r-bloggers/tree/master/inst/vignettes/shinyapps/App-2") 
+# Downloading https://github.com/ttmmghmm/r-bloggers/archive/master.tar.gz
+# Error in shinyAppDir(x) : App dir must contain either app.R or server.R.
+# https://gist.github.com/ttmmghmm/c495c18f767d5c34a3a3
+runGist("c495c18f767d5c34a3a3")
+```
+
+
 # sample app
 ```{r}
 library(shinyapps)
