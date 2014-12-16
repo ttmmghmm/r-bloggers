@@ -5,17 +5,65 @@ date: "12/16/2014"
 output: html_document
 ---
 
-## Get historical US daily data
-
-Source: http://stackoverflow.com/questions/3507744/downloading-yahoo-stock-prices-in-r
 
 ```{r lib load, echo = TRUE, results = FALSE}
 suppressMessages(library(quantmod))
 library(plyr)
 library(TTR)
 library(magrittr)
+library(Quandl)
 ```
 
+```{r auth, echo = FALSE, results = FALSE}
+# TODO: mask
+Quandl.auth("H3ojmQPZHWGrwyADyqKY")
+```
+
+
+```{r google search}
+https://www.google.com/finance?q=ishares&search_plus_one=form&ei=fr-QVLngO-SDwAOB7YGABg
+https://www.google.com/finance?q=vanguard&restype=company&noIL=1&ei=7cCQVLmCB-qNwAPFvYDQAg
+https://www.google.com/finance?q=ishares+etf+uk&search_plus_one=form&ei=UbyQVOnsCIqowAPFjIAw
+```
+
+```{r Quandl.search}
+(tickerName <- sample(c("spdr", "ishares", "vanguard"), 1))
+(pageNum <- sample(1:10, 1))
+df <- Quandl.search(query = tickerName, # only mandatory parameter
+  page = pageNum, # which page of search results you wish to see (default=1)
+  source = c("DOE", "GOOGLE")[2], # specifies that you want to search within a particular data source (default=all data sources)
+  silent = TRUE # to see the first 3 results on the console
+)
+# str(df[1])
+df %>% sapply(FUN = "[[", "name") 
+
+# use wildcards "?" and "*" in any of the above fields. 
+
+```
+
+
+```{r quandl}
+typeData <- c("dataframe" = "raw", ts = "ts", zoo = "zoo", xts = "xts")
+str(oil <- Quandl(c("NSE/OIL.4","WIKI/AAPL.1"),
+    # start_date="yyyy-mm-dd", end_date="yyyy-mm-dd",
+    # collapse = c("weekly", "monthly", "quarterly", "annual")[1],
+    # transformation = c("diff", "rdiff", "normalize", "cumulative")[1],
+    type = typeData["xts"])
+)
+
+```
+
+
+# Morning Star - ishares
+need to fill in a form and press return?
+need to scrape the page?
+```{r}
+http://tools.morningstar.co.uk/uk/etfquickrank/default.aspx?Site=UK&Universe=ETALL%24%24ALL&search=+etf&LanguageId=en-GB
+
+```
+
+## Get historical US daily data
+Source: http://stackoverflow.com/questions/3507744/downloading-yahoo-stock-prices-in-r
 
 ```{r TTR stockSymbols}
 # install.packages("TTR",repos="http://r-forge.r-project.org")
