@@ -1,0 +1,48 @@
+---
+title: "HMM"
+author: "me"
+date: "12/13/2014"
+output: html_document
+---
+
+<http://www.r-bloggers.com/fun-with-r-and-hmms/>
+
+```{r}
+fn <- gzfile("https://ia600503.us.archive.org/21/items/BrownCorpus/brown.zip", )
+readLines(fn , n = 10)
+
+```
+
+```{r max correlation}
+install.packages('acepack')
+library(acepack)
+x = -100 : 100
+y = (100^2 - x^2)^0.5    # let's make a circle
+cor(x, y)
+# [1,] 0     # a circular line has zero linear correlation
+
+cor(x, y, method='spearman')
+# [1,] 0     # and zero rank correlation
+
+argmax = ace(x, y)
+cor(argmax$tx, argmax$ty)
+
+```
+
+
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,57 @@
+---
+title: "minimum-variance portfolio"
+author: "me"
+date: "12/10/2014"
+output: html_document
+---
+
+## <http://enricoschumann.net/R/minvar.htm>
+
+global minimum-variance (MV) portfolio - the leftmost point of the mean-variance efficient frontier. 
+It is found by choosing portfolio weights that minimise overall variance subject only to the constraint that the sum of the weights w is one. 
+* So in particular, short sales are allowed.
+
+### mean zero and volatility 5% - monthly equity returns
+As an example dataset, we create artificial returns with mean zero and volatility 5%. (This order of magnitude would be reasonable for monthly equity returns.) 
+```{r}
+require("quadprog")
+nO <- 100L  ## number of observations
+nA <- 10L   ## number of assets
+# returns are stored in a matrix mData.
+mData <- array(rnorm(nO * nA, mean = 0, sd = 0.05), dim = c(nO, nA))
+```
+
+### minimise w %*% cov(mData) %*% w, subject to the constraint that sum(w) equals one.
+```{r}
+aMat <- array(1, dim = c(1,nA))
+bVec <- 1
+zeros <- array(0, dim = c(nA,1))
+# install.packages("solQP")
+solQP <- solve.QP(cov(mData), zeros, t(aMat), bVec, meq = 1)
+solQP$solution
+```
+
+You can also embed plots, for example:
+
+## file:///C:/Users/i323910/Downloads/highfrequency.pdf
+```{r, echo=FALSE}
+# install.packages("highfrequency", repos="http://R-Forge.R-project.org")
+library(highfrequency)
+from = "2008-01-02";
+to = "2008-01-03";
+}
+
+```{r}
+# TODO: set the HOME directory???
+datasource = "./data";
+datadestination = "./data";
+convert(from, to, datasource, datadestination, trades=TRUE,
+  quotes=FALSE,ticker=c("AA","AAPL"), dir=TRUE, extension="txt",
+  header=FALSE,tradecolnames=NULL,quotecolnames=NULL,
+  format="%Y%m%d %H:%M:%S");
+
+
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

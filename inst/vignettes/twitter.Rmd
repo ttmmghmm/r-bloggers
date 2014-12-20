@@ -1,0 +1,80 @@
+---
+title: "twitteR"
+author: "ttmmghmm"
+date: "12/17/2014"
+output: slidy_presentation
+---
+
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+<http://thinktostart.com/twitter-authentification-with-r/>
+
+## Install and start twitteR
+```{r Install and start twitteR}
+# install.packages(c("devtools", "rjson", "bit64", "httr"))
+#RESTART R session!
+# library(devtools)
+# install_github("geoffjentry/twitteR")
+library(twitteR)
+library(plyr)
+```
+
+## Login to twitter
+<https://apps.twitter.com/app/7659862/keys>
+```{r login to twitter}
+api_key <- "8OorW84H9NdgVY2R86DsnxZ4u"
+api_secret <- "KRxETy76qA4kt6GEwJD4bI4Jcq9FMgZAaKEaIr2SSYKFSXOyJM"
+access_token <- "45523367-8cePJieQl9psiEL6rd0MOhyQubu5TQ5ypXYNRLMro"
+access_token_secret <- "lH2drQ0Suv0zGKQmbpMyJmweR7PletI9bVx0LlCzKcdME"
+setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
+```
+
+```{r get results}
+searchTwitter("iphone", n = 50, lang='en'))
+tweets = searchTwitter("#apple", n=200)
+str(tweets[[1]])
+tweets.text = laply(tweets,function(t)t$getText())
+str(tweets.text)
+```
+
+<http://thinktostart.com/sentiment-analysis-on-twitter-with-viralheat-api/>
+
+<http://thinktostart.com/sentiment-analysis-on-twitter-with-datumbox-api/>
+http://thinktostart.com/analyze-google-posts-with-r/
+
+```{r seems out of date, eval = FALSE, echo = FALSE}
+# http://thinktostart.com/sentiment-analysis-on-twitter/
+reqURL <- "https://api.twitter.com/oauth/request_token"
+accessURL <- "http://api.twitter.com/oauth/access_token"
+authURL <- "http://api.twitter.com/oauth/authorize"
+consumerKey <- access_token
+consumerSecret <- access_token_secret
+
+twitCred <- OAuthFactory$new(consumerKey=consumerKey,consumerSecret=consumerSecret,requestURL=reqURL,accessURL=accessURL,authURL=authURL) 
+download.file(url="http://curl.haxx.se/ca/cacert.pem", destfile="cacert.pem")
+ 
+twitCred$handshake(cainfo="cacert.pem")
+registerTwitterOAuth(twitCred)
+```
+
+
+
+- <http://thinktostart.com/sentiment-analysis-on-twitter-with-datumbox-api/>
+- Bullet 2
+- Bullet 3
+
+
+```{r}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r, echo=FALSE}
+plot(cars)
+```
+

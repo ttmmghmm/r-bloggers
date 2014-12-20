@@ -1,0 +1,105 @@
+---
+title: "Untitled"
+author: "me"
+date: "12/14/2014"
+output: html_document
+runtime: shiny
+---
+
+```{r tut 1}
+library(shiny)
+runExample("01_hello")
+
+setwd("~/pkg/r-bloggers/inst/vignettes/shinyapps")
+runApp("App-1")
+
+# If you would like your app to display in showcase mode, you can run 
+runApp("App-1", display.mode = "showcase")
+
+```
+```{r}
+system.file("examples", package="shiny")
+
+runExample("01_hello") # a histogram
+runExample("02_text") # tables and data frames
+runExample("03_reactivity") # a reactive expression
+runExample("04_mpg") # global variables
+runExample("05_sliders") # slider bars
+runExample("06_tabsets") # tabbed panels
+runExample("07_widgets") # help text and submit buttons
+runExample("08_html") # shiny app built from HTML
+runExample("09_upload") # file upload wizard
+runExample("10_download") # file download wizard
+runExample("11_timer") # an automated timer
+```
+
+```{r but has to be a zip file with nothing else in that folder}
+app2url <- "https://github.com/ttmmghmm/r-bloggers/tree/master/inst/vignettes/shinyapps/App-2"
+runUrl(url = app2url)
+```
+
+```{r}
+# runGitHub( "<your repository name>", "<your user name>") 
+runGitHub( "ttmmghmm/r-bloggers") 
+runGitHub( "ttmmghmm/r-bloggers/tree/master/inst/vignettes/shinyapps/App-2") 
+# Downloading https://github.com/ttmmghmm/r-bloggers/archive/master.tar.gz
+# Error in shinyAppDir(x) : App dir must contain either app.R or server.R.
+# https://gist.github.com/ttmmghmm/c495c18f767d5c34a3a3
+runGist("c495c18f767d5c34a3a3")
+```
+
+
+# sample app
+```{r}
+library(shinyapps)
+setwd("~/pkg/r-bloggers/inst/vignettes/shiny")
+shinyapps::deployApp("~/pkg/r-bloggers/inst/vignettes/shiny")
+
+```
+
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
+
+```{r, echo=FALSE}
+inputPanel(
+  selectInput("n_breaks", label = "Number of bins:",
+              choices = c(10, 20, 35, 50), selected = 20),
+  
+  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
+              min = 0.2, max = 2, value = 1, step = 0.2)
+)
+
+renderPlot({
+  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
+       xlab = "Duration (minutes)", main = "Geyser eruption duration")
+  
+  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
+  lines(dens, col = "blue")
+})
+```
+
+## Embedded Application
+
+It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
+
+```{r, echo=FALSE}
+shinyAppDir(
+  system.file("examples/06_tabsets", package="shiny"),
+  options=list(
+    width="100%", height=550
+  )
+)
+```
+
+Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
+
+You can also use the `shinyApp` function to define an application inline rather then in an external directory.
+
+In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
+
+
+

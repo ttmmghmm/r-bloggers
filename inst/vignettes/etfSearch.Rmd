@@ -1,0 +1,130 @@
+---
+title: "eftShares"
+author: "ttmmghmm"
+date: "12/16/2014"
+output: html_document
+---
+
+
+```{r lib load, echo = TRUE, results = FALSE}
+suppressMessages(library(quantmod))
+library(plyr)
+library(TTR)
+library(magrittr)
+library(Quandl)
+```
+
+```{r auth, echo = FALSE, results = FALSE}
+# TODO: mask
+Quandl.auth("H3ojmQPZHWGrwyADyqKY")
+```
+
+
+```{r google search}
+https://www.google.com/finance?q=ishares&search_plus_one=form&ei=fr-QVLngO-SDwAOB7YGABg
+https://www.google.com/finance?q=vanguard&restype=company&noIL=1&ei=7cCQVLmCB-qNwAPFvYDQAg
+https://www.google.com/finance?q=ishares+etf+uk&search_plus_one=form&ei=UbyQVOnsCIqowAPFjIAw
+```
+
+```{r Quandl.search}
+(tickerName <- sample(c("spdr", "ishares", "vanguard"), 1))
+(pageNum <- sample(1:10, 1))
+df <- Quandl.search(query = tickerName, # only mandatory parameter
+  page = pageNum, # which page of search results you wish to see (default=1)
+  source = c("DOE", "GOOGLE")[2], # specifies that you want to search within a particular data source (default=all data sources)
+  silent = TRUE # to see the first 3 results on the console
+)
+# str(df[1])
+df %>% sapply(FUN = "[[", "name") 
+
+# use wildcards "?" and "*" in any of the above fields. 
+
+```
+
+
+```{r quandl}
+typeData <- c("dataframe" = "raw", ts = "ts", zoo = "zoo", xts = "xts")
+str(oil <- Quandl(c("NSE/OIL.4","WIKI/AAPL.1"),
+    # start_date="yyyy-mm-dd", end_date="yyyy-mm-dd",
+    # collapse = c("weekly", "monthly", "quarterly", "annual")[1],
+    # transformation = c("diff", "rdiff", "normalize", "cumulative")[1],
+    type = typeData["xts"])
+)
+
+```
+
+
+# Morning Star - ishares
+need to fill in a form and press return?
+need to scrape the page?
+```{r}
+http://tools.morningstar.co.uk/uk/etfquickrank/default.aspx?Site=UK&Universe=ETALL%24%24ALL&search=+etf&LanguageId=en-GB
+
+```
+
+## Get historical US daily data
+Source: http://stackoverflow.com/questions/3507744/downloading-yahoo-stock-prices-in-r
+
+```{r TTR stockSymbols}
+# install.packages("TTR",repos="http://r-forge.r-project.org")
+getwd()
+# TODO: cache this data?
+usaSymbols <- stockSymbols(c("AMEX", "NASDAQ", "NYSE"))
+str(usaSymbols)
+table(usaSymbols$Exchange)
+head(usaSymbols)
+tail(usaSymbols)
+indEtf <- grep("eft", usaSymbols$Name, ignore.case = TRUE) 
+table(indEtf)
+# usaSymbols %>% subset(isEtf) %>% head
+```
+
+```{r nyseSymbols, echo = F, eval = F, results = FALSE}
+# ?stockSymbols
+nyseSymbols <- stockSymbols(c("AMEX", "NASDAQ", "NYSE")[3])
+str(nyseSymbols)
+head(nyseSymbols)
+# perhaps store in package?
+dirData <- "~/pkg/r-bloggers/data"
+# setwd("~/pkg/r-bloggers/inst/vignettes")
+fn <- file.path(dirData, "NYSE_symbols.txt")
+write.table(nyseSymbols$Symbol, fn, row.names=FALSE, col.names= FALSE)
+```
+
+
+```{r dont eval, echo = F, eval = F, results = FALSE}
+symbols <- c("MSFT","C","VIA/B","MMM")
+
+#1
+# auto.assign=FALSE in getSymbols() as it avoids the insanity of filling the environment with all those symbols when all I want is the merged data.frame
+# quantmod::getSymbols, TTR::getYahooData, tseries::get.hist.quote, fImport::yahooImport
+l_ply(symbols, function(sym) try(getSymbols(sym))) 
+symbols <- symbols[symbols %in% ls()]
+
+#2
+sym.list <- llply(symbols, get) 
+
+#3
+data <- xts()
+for(i in seq_along(symbols)) {
+    symbol <- symbols[i]
+    # clean up the merge with: merge(data, Cl(get(symbol))) 
+    data <- merge(data, get(symbol)[,paste(symbol, "Close", sep=".")])
+}
+```
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

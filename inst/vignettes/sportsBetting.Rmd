@@ -1,0 +1,33 @@
+---
+title: "betting"
+author: "ttmmghmm"
+date: "12/17/2014"
+output: ioslides_presentation
+---
+
+## R Markdown
+
+ the **Knit** button
+ 
+https://github.com/phillc73/abettor/blob/master/vignettes/abettor-placeBet.Rmd
+
+http://www.rdatamining.com/home
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Code and Output
+
+```{r}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r, echo=FALSE}
+plot(cars)
+```
+

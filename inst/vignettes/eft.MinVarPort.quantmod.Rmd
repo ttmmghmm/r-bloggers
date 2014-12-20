@@ -1,0 +1,108 @@
+---
+title: "quantmod"
+author: "me"
+date: "12/10/2014"
+output: html_document
+---
+
+
+## Minimum Variance portfolio 
+combine various _risk measures_, _Asset Allocation_, _backtesting_ (Systematic Investor Toolbox).
+
+1. S&P500 (SPY)
+2. Nasdaq 100 (QQQ)
+3. Emerging Markets (EEM)
+4. Russell 2000 (IWM)
+5. MSCI EAFE (EFA) <http://www.google.com/finance?q=EFA>
+6. Long-term Treasury Bonds (TLT)
+7. Real Estate (IYR)
+8. Gold (GLD)
+
+### <http://systematicinvestor.wordpress.com/2011/12/13/backtesting-minimum-variance-portfolios/>
+
+```{r}
+con = gzcon(url('https://github.com/systematicinvestor/SIT/raw/master/sit.gz', 'rb'))
+source(con)
+close(con)
+
+library('quantmod')
+library('quadprog')
+library('lpSolve')
+
+tickers = c('SPY','QQQ','EEM',"IWM","EFA","TLT","IYR","GLD")
+dat <- new.env()
+getSymbols(tickers, src = 'yahoo', from = c('2000-01-01', '1980-01-01')[1], env = dat, auto.assign = T)
+for(i in ls(dat)) dat[[i]] = adjustOHLC(dat[[i]], use.Adjusted=T)
+dat.weekly <- new.env()
+for(i in tickers) dat.weekly[[i]] = to.weekly(dat[[i]], indexAt='endof')
+#bt.prep(dat, align='remove.na', dates='1990::2011')
+#bt.prep(dat.weekly, align='remove.na', dates='1990::2011')
+ 
+    #*****************************************************************
+    # Code Strategies
+    #****************************************************************** 
+    prices = data$prices   
+    n = ncol(prices)
+     
+    # find week ends
+    week.ends = endpoints(prices, 'weeks')
+        week.ends = week.ends[week.ends > 0]     
+ 
+         
+    # Equal Weight 1/N Benchmark
+    data$weight[] = NA
+        data$weight[week.ends,] = ntop(prices[week.ends,], n)       
+         
+        capital = 100000
+        data$weight[] = (capital / prices) * data$weight
+    equal.weight = bt.run(data, type='share')
+         
+     
+    #*****************************************************************
+    # Create Constraints
+    #*****************************************************************
+    constraints = new.constraints(n, lb = -Inf, ub = +Inf)
+     
+    # SUM x.i = 1
+    constraints = add.constraints(rep(1, n), 1, type = '=', constraints)        
+ 
+         
+    ret = prices / mlag(prices) - 1
+    weight = coredata(prices)
+        weight[] = NA
+         
+    for( i in week.ends[week.ends >= (63 + 1)] ) {
+        # one quarter is 63 days
+        hist = ret[ (i- 63 +1):i, ]
+         
+        # create historical input assumptions
+        ia = create.historical.ia(hist, 252)
+            s0 = apply(coredata(hist),2,sd)     
+            ia$cov = cor(coredata(hist), use='complete.obs',method='pearson') * (s0 %*% t(s0))
+             
+        weight[i,] = min.risk.portfolio(ia, constraints)
+    }
+ 
+    # Minimum Variance
+    data$weight[] = weight      
+        capital = 100000
+        data$weight[] = (capital / prices) * data$weight
+    min.var.daily = bt.run(data, type='share', capital=capital))
+
+```
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
