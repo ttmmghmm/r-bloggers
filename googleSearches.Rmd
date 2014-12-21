@@ -62,6 +62,31 @@ stats.grok.se
 ## It helps very much to first verify that you page and title exists. It does.
 Sample python code to access page views for two articles ('Advisor' and 'Adviser') for all months between 2008 and 2014 (my reason). Note that days that don't exist (i.e. June 31st) will return 0 (zero) page views.
 
+
+# free databases
+The Internet Archive
+Wayback Machine
+Archives HTML from old websites - example: NY Times from Feb 24, 2001
+API Documentation - No authentication needed (!)
+Example python code that finds historical New York Times front pages that include a certain string, and prints a link to those archived pages.
+Freebase API:
+Freebase is a structured database based on community editors.
+Owned by Google and is the source of their Knowledge Graph.
+Freely available for commercial and non-commercial (with Creative Commons Attribution License)
+Data can be accessed via browser, API, RDF endpoint, and database dump.
+For API access, authentication is required via Google's API Console
+Once authenticated, user can read, search and download.
+One example of Python library: freebase
+
+Stock quotes
+
+Markit On Demand
+
+Free and authentication-less API for obtaining stock quotes and historical data
+Documention
+example GET request with JSON output
+
+
 # A Minimal Example for Markdown
 
 This is a minimal example of using **knitr** to produce an _HTML_ page from _Markdown_.
