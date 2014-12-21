@@ -33,6 +33,15 @@ access_token_secret <- "lH2drQ0Suv0zGKQmbpMyJmweR7PletI9bVx0LlCzKcdME"
 setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 ```
 
+```{r}
+library(magrittr)
+hashtags <- c('dataviz', 'rstats', 'opendata', 'data', 'analytics', 'bigdata', 'spark', 'sparkr')
+lst <- lapply(hashtags, searchTwitter, n = 9, lang='en')
+names(lst) <- hashtags
+str(lst[1])
+```
+
+
 ```{r get results}
 searchTwitter("iphone", n = 50, lang='en'))
 tweets = searchTwitter("#apple", n=200)
@@ -40,6 +49,11 @@ str(tweets[[1]])
 tweets.text = laply(tweets,function(t)t$getText())
 str(tweets.text)
 ```
+
+ 
+http://www.everydayanalytics.ca/p/articles.html
+ 
+http://www.everydayanalytics.ca/2014/10/twitter-pop-up-analytics.html
 
 <http://thinktostart.com/sentiment-analysis-on-twitter-with-viralheat-api/>
 

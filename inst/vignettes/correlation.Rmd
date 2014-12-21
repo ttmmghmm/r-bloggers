@@ -8,6 +8,8 @@ output: html_document
 <https://www.quora.com/Correlation-can-measure-only-the-linear-relationship-between-variables-What-are-the-methods-for-measuring-non-linear-relationships-between-two-variables>
 
 
+<http://blog.ouseful.info/2014/12/17/sketching-scatterplots-to-demonstrate-different-correlations/>
+
 ```{r max correlation}
 install.packages('acepack')
 library(acepack)
