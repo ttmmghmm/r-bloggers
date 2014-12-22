@@ -34,8 +34,7 @@
   out
 }
 
-lsos <- structure(function
-#### shorthand for \code{\link{.ls.objects}}
+lsos <- structure(function # shorthand for \code{\link{.ls.objects}}
 (..., n=10) {
   .ls.objects(..., order.by="Size", decreasing=TRUE, head=TRUE, n=n)
 },ex=function(){
