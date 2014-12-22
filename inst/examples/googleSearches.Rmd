@@ -1,0 +1,157 @@
+---
+title: "Google searches and stock prices"
+author: "ttmmghmm"
+date: "12/20/2014"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 1
+    number_sections: true
+    highlight: tango # "default", "tango", "pygments", "kate", "monochrome", "espresso", "zenburn", "haddock", and "textmate"
+    theme: united # "default", "cerulean", "journal", "flatly", "readable", "spacelab", "united", and "cosmo"
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+---
+```{r global_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+               echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+# section one
+[ref 1](http://www.nature.com/srep/2013/130508/srep01801/full/srep01801.html "comment goes here")
+ 
+[ref 2](http://www.wired.co.uk/news/archive/2013-05/8/wikipedia-views-stock-market "asdfs sad as f")
+
+Previous research has shown that the  
+
+* volume of financially-related searches on Google  
+    * http://www.nature.com/srep/2013/130425/srep01684/full/srep01684.html   
+* "mood" of tweets on Twitter can be linked to changes in the stock market.
+    * Measuring how calm the Twitterverse is on a given day can foretell the direction of changes to the Dow Jones Industrial Average three days later with an accuracy of 86.7 percent.
+    * one emotion, calmness, lined up surprisingly well with the rises and falls of the stock market -- but three or four days in advance.
+    * predict whether the stock market would go up or down, first using only the Dow Jones Industrial Average from the past three days, then including emotional data.
+        * The algorithm did pretty well using stock market data alone, predicting the shape of the stock market with 73.3 percent accuracy. But it did even better when the emotional information was added, reaching up to 86.7 percent accuracy.
+    * http://www.wired.co.uk/news/archive/2010-10/20/twitter-predicts-the-stock-market
+        + http://arxiv.org/abs/1010.3003
+* views of Wikipedia pages
+    + correlation with a fall in share price, rather than a rise, could be because of humans' risk-averse nature.
+    + http://www.nature.com/srep/2013/130508/srep01801/full/srep01801.html
+    + http://dumps.wikimedia.org/other/pagecounts-raw/
+
+http://www.nature.com/srep/2013/130425/srep01684/full/srep01684.html
+http://www.wired.co.uk/news/archive/2010-10/20/twitter-predicts-the-stock-market
+
+* profits of up to 141 percent higher than a random trading strategy, the researchers found.
+** "In our strategy, we sold the [Dow Jones Industrial Average (DJIA)] if people had recently looked at a financially related page more than in earlier weeks, and closed the position a week later," explained Moat. "If people had recently looked at a financially related page less than in earlier weeks, we bought the DJIA and closed the position a week later." 
+* Monitoring pages related to financial topics, such as macroeconomics and capital, would have generated profits of up to 297 percent.
+ 
+The frequency of Wikipedia _edits_, as opposed to _views_, showed little or no correlation with stock market movements, probably because the same people who edit Wikipedia pages are not the same people who make decisions on the stock market.
+
+The researchers also examined non-financial Wikipedia pages, such as pages about famous actors, and found no correlation.
+Data about Wikipedia page views was gathered from stats.grok.se
+
+# <stats.grok.se>
+http://opendata.stackexchange.com/questions/1677/a-web-api-users-guide-for-free-and-open-data
+stats.grok.se
+# Wikipedia page views are useful for many things, including predicting changes in a stock price (paper)
+## A flood of views to a company's Wikipedia page may be a sign that their stock price is about to plummet. (news article)
+## You can access the raw data without any authentication, either by download or via an API.
+## For the API, you construct a URL like this: http://stats.grok.se/json/en/201306/Data , which would give you the page views in JSON format for the article 'Data' from June, 2013.
+## It helps very much to first verify that you page and title exists. It does.
+Sample python code to access page views for two articles ('Advisor' and 'Adviser') for all months between 2008 and 2014 (my reason). Note that days that don't exist (i.e. June 31st) will return 0 (zero) page views.
+
+
+# free databases
+The Internet Archive
+Wayback Machine
+Archives HTML from old websites - example: NY Times from Feb 24, 2001
+API Documentation - No authentication needed (!)
+Example python code that finds historical New York Times front pages that include a certain string, and prints a link to those archived pages.
+Freebase API:
+Freebase is a structured database based on community editors.
+Owned by Google and is the source of their Knowledge Graph.
+Freely available for commercial and non-commercial (with Creative Commons Attribution License)
+Data can be accessed via browser, API, RDF endpoint, and database dump.
+For API access, authentication is required via Google's API Console
+Once authenticated, user can read, search and download.
+One example of Python library: freebase
+
+Stock quotes
+
+Markit On Demand
+
+Free and authentication-less API for obtaining stock quotes and historical data
+Documention
+example GET request with JSON output
+
+
+# A Minimal Example for Markdown
+
+This is a minimal example of using **knitr** to produce an _HTML_ page from _Markdown_.
+
+## R code chunks
+
+```{r setup}
+# set global chunk options: images will be 7x5 inches
+knitr::opts_chunk$set(fig.width=7, fig.height=5)
+options(digits = 4)
+```
+
+Now we write some code chunks in this markdown file:
+
+```{r computing}
+x <- 1+1 # a simple calculator
+set.seed(123)
+rnorm(5)  # boring random numbers
+```
+
+We can also produce plots:
+
+```{r graphics}
+par(mar = c(4, 4, .1, .1))
+with(mtcars, {
+  plot(mpg~hp, pch=20, col='darkgray')
+  lines(lowess(hp, mpg))
+})
+```
+
+## Inline code
+
+Inline R code is also supported, e.g. the value of `x` is `r x`, and 2 &times; &pi;
+= `r 2*pi`.
+
+## Math
+
+LaTeX math as usual: $f(\alpha, \beta) \propto x^{\alpha-1}(1-x)^{\beta-1}$.
+
+## Misc
+
+You can indent code chunks so they can nest within other environments such as lists.
+
+1. the area of a circle with radius x
+    ```{r foo}
+    pi * x^2
+    ```
+2. OK, that is great
+
+To compile me, use
+
+```{r compile, eval=FALSE}
+library(knitr)
+knit('knitr-minimal.Rmd')
+```
+
+## Conclusion
+
+Markdown is super easy to write. Go to **knitr** [homepage](http://yihui.name/knitr) for details.
+
+printing of the R code that generated the plot.
+
+
+1. volume of financially-related searches on Google 
+    ```{r gfoo}
+    pi * pi^2
+    ```
+2. OK, that is great
