@@ -1,0 +1,112 @@
+---
+title: "twitteR"
+author: "ttmmghmm"
+date: "12/17/2014"
+output: slidy_presentation
+---
+
+# Diffusion-Limited Aggregation (DLA)
+
+From <http://www.exegetic.biz/blog/2014/12/simulating-intricate-branching-patterns-with-dla/>
+
+The objects which evolve from this process are intrinsically random, yet have self-similar structure across a range of scales. There is also an element of positive feedback, where once a protuberance has formed on the cluster, further particles are more likely to adhere to it since they will probably encounter it first.
+
+
+## construct a grid 
+* filled with NA 
+* except for four seed locations at the centre.
+
+```{r construct a grid}
+W <- 20
+grid <- matrix(NA, nrow = W, ncol = W)
+grid[W/2 + c(0, 1), W/2 + c(0, 1)] = 0
+str(grid)
+```
+
+## generate 2-D random walks
+* create a table of possible moves
+* individual moves are sampled at random. 
+
+```{r generate 2-D random walks}
+moves <- data.frame(dx = c(0, 0, +1, -1), dy = c(+1, -1, 0, 0))
+M = nrow(moves)
+moves
+```
+
+## transport a particle from its initial location 
+* until it either leaves the grid 
+* or adheres to the cluster at the origin.
+```{r}
+diffuse <- function(p) {
+  count = 0
+  #
+  while (TRUE) {
+    p = p + moves[sample(M, 1),]
+    #
+    count = count + 1
+    #
+    # Black boundary conditions
+    #
+    if (p$x > W | p$y > W | p$x < 1 | p$y < 1) return(NA)
+    #
+    # Check if it sticks (to nearest neighbour)
+    #
+    if (p$x < W && !is.na(grid[p$x+1, p$y])) break
+    if (p$x > 1 && !is.na(grid[p$x-1, p$y])) break
+    if (p$y < W && !is.na(grid[p$x, p$y+1])) break
+    if (p$y > 1 && !is.na(grid[p$x, p$y-1])) break
+  }
+  #
+  return(c(p, count = count))
+}
+
+```
+
+## apply this procedure to a batch of particles
+
+```{r batch of particles}
+library(foreach)
+
+# Number of particles per batch
+#
+PBATCH <- 5000
+#
+# Select starting position
+#
+phi = runif(PBATCH, 0, 2 * pi)
+#
+x = round((1 + cos(phi)) * W / 2 + 0.5)
+y = round((1 + sin(phi)) * W / 2 + 0.5)
+#
+particles <- data.frame(x, y)
+
+result = foreach(n = 1:PBATCH) %do% diffuse(particles[n,])
+invisilbe(lapply(result, function(p) {if (length(p) == 3) grid[p$x, p$y] <<- p$count}))
+# str(result)
+
+grid
+# how to plot grid?
+
+```
+
+
+```{r NAs applied to list elem should remove that element}
+x <- result
+x <- x[which(3 == sapply(x, length))]
+x
+```
+
+# Results
+* grid of locations where particles have adhered
+* number at each location is the diffusion time
+  * the number of steps required for the particle to move from its initial location to its final resting place
+  
+Scaling it Up
+* run time escalates enormously.
+* parallelise the algorithm. 
+  * using the SNOW package and ran it on an MPI cluster. 
+  * The changes to the code are trivial, involving only 
+    * the creation and initialisation of the cluster 
+    * and changing %do% to %dopar% in the foreach() loop.
+
+
