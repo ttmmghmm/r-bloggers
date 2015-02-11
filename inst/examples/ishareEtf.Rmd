@@ -1,0 +1,218 @@
+---
+title: iShare ETF
+author: "me"
+date: February 11, 2015
+output: html_document
+---
+
+# Bond yield and equity dividend income optimised portfolio
+<http://prescientmuse.blogspot.co.uk/2015/02/bond-yield-and-equity-dividend-income.html>
+
+* IShares ETF instruments available to a UK audience via the LSE
+    * largely due to decent data requirements. 
+* Exclude: how the market exposure might be hedged in this post.
+
+
+## goals of the portfolio
+* total annual return >=  target from dividend and yield alone.
+* diversify holdings across countries, sectors and asset types 
+    * in order to mitigate some correlation risk between assets.
+* minimise variance in monthly returns
+### list the ETFs under consideration 
+* European Dividend [IDVY](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=e90b5bc8-c43c-4a66-9752-318d0d59ce45&user=)
+* UK Dividend [IUKD](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=09f440ab-43b6-493f-84c0-eea1af5f93bc&user=)
+* Asia Pacific Dividend [IAPD](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=7d420d51-af22-4707-b21f-d15bc38fb4be&user=)
+* Emerging Market Dividend [SEDY](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=d32964f7-dd48-4ebc-b41f-14e58b9c4738&user=)
+* GBP Denominated Corporate Bonds [SLXX](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=e8de7156-5e7e-40bf-ad6f-768d69345cf7&user=)
+* EUR Denominated Corporate Bonds [IEBC](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=c3407fe2-99b2-4431-aeda-217695a1d3a5&user=)
+* UK Gilts [IGLT](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=2474aaad-0437-49f3-bf2e-10106d989681&user=)
+* Emerging Market Local Currency Government Bonds [SEML](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=d6b301c6-2c81-47e4-9120-6aca3dc59b97&user=)
+* Emerging Market USD Government Bonds [SEMB](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=6175b1f1-a530-487e-96b8-7c37b76bb007&user=)
+* US Treasury 1-3 year [IBTS](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=ba3430be-2876-4804-9893-9a3dd9a0c5d3&user=)
+* Developed Markets Property [IUKP](http://www.fundslibrary.co.uk/FundsLibrary.DataRetrieval/Documents.aspx?type=point_of_sale&docid=b8dbf269-e5e7-4f46-9e90-87ff969e5f73&user=)
+
+### the information available each of them
+* NAV Price - The price per share of the underlying basket. 
+    * May be used to establish the percentage return that the expected distribution yield represents. I.e. dist/nav
+* Distribution History - The dates and amounts paid per share at each distribution. 
+    * May be used to approximate which months yield and dividend returns tend to be paid and calculate expected distribution return.
+* Holdings - The debt or equity instruments, it's proportion of the entire portfolio, the associated country and sector. 
+    * May be used to pick ETFs such that the distribution of holdings in the portfolio is diversified.
+
+### how it may be used to accomplish the outlined goals. 
+$r \ge t$, where $r$ is the annual percentage return and $t$ is an arbitrary target (e.g. 0.045).
+
+Let the overall investment across ETFs indexed by $j$ in country sector indexed by $i$ be $I(i) = \sum_{j=1}^n{x_je_{i,j}}$ where $x_j$ represents the fractional allocation to ETF $j$ and $e_{i,j}$ represents the fraction of country sector $i$ holdings in ETF $j$. Since both $x_j$ and $e_{i,j}$ sum to 1 over their respective ranges, $I:[1,N] \rightarrow [0,1]$. The diversification constraint can be expressed as $\underset{x_1,...,x_n}{\operatorname{argmin}}{\sum_{i=1}^N{|1/N - I(i, x_1,...,x_n)}|}$ where $N$ is the total number of country sectors and $x_1,...,x_n$ are parameters to $I$. Minimisation of the constraint requires that the overall investment in holdings across ETFs be equally balanced across country sectors. E.g. that the investment in UK Financials be equal to French Telecom, etc.
+
+Distribution of returns across 12 months can be expressed similarly to the diversification requirement. Let the return on month $i$ of total ETF investments be represented by $R(i) = \sum_{j=1}^n{x_jr_{i,j}}$ where $x_j$ represents the fractional allocation to ETF $j$ as before, and $r_{i,j}$ represents the return of ETF $j$ on month $i$. The distribution constraint may then be expressed as $\underset{x_1,...,x_n}{\operatorname{argmin}}{\sum_{i=1}^{12}{|t/12 - R(i, x_1,...x_n)}|}$ where $t$ is the target annual return. Minimisation of the constraint requires that the annual returns be equally distributed each month.
+
+## how to construct a programmatic solution 
+Conditions 2 and 3 have been expressed in terms of minimisations of the _absolute sums_, in order to keep the problem linear. 
+For all intensive purposes it should produce similar results to the more familiar least squares quadratic form, since the variance of distributions and allocation is low. 
+
+There are 11 parameters in our problem, a non-linear interpretation could have made an exhaustive solution intractable. 
+
+Further, is should be noted that solving both 2 and 3 simultaneously may be impossible, and pareto-optimality may be required.
+
+A solution to the new goals can be expressed as an elegant linear programme if we are willing to accept cashflow distribution and diversification as equally desirable. To begin, a matrix needs to be constructed with the rows representing <country>.<sector>.<month> distribution returns expressed as a percentage of current NAV price, and the columns representing the individual ETF contributions. I.e. d_{i,j} is dist/NAV of ETF j in <country>.<sector>.<month> i where i∈[1,m] where m=countries×sectors×months. The optimisation is then argminv1,...,vn,x1,...,xn∑mi=1vi subject to:
+* ∑nj=1xj=1
+* ∑nj=1xjrj≥t
+* ∀i∈[1,m],vi−∑nj=1xjdi,j≥t/m and vi+∑nj=1xjdi,j≥t/m
+
+The first condition makes sure that the weights xj assigned to each ETF are fractional. The second condition requires that the sum of ETF returns (rj) weighted by allocations xj ensures at least the target return t. The third condition introduces a variable vi per row, which is used to minimise the difference between the row return and the equally distributed target via optimisation. There are two constraints for every vi only formally as the row sum cannot be negative in this case however if they could, the negative constraint would be needed.
+
+## practicalities and important assumptions
+For a target of 4.5% annual return, the optimisation produced the following allocations.
+
+SEML  IEBC	IUKP	IGLT	SEMB	SLXX
+0.18	0.13	0.04	0.06	0.22	0.37
+
+resultant cash-flow for a £100000 investment.
+
+Month  Income	Cumulative
+1	842.09	842.09	
+2	114.97	957.05	
+3	505.28	1462.33	
+4	93.75	1556.08	
+5	188.64	1744.72	
+6	505.28	2250.00	
+7	842.09	3092.09	
+8	114.97	3207.05	
+9	505.28	3712.33	
+10	93.75	3806.08	
+11	188.64	3994.72	
+12	505.28	4500.00	
+
+Note that in the code:
+* sectors were not used for diversification 
+* and countries were conflated into zones. 
+A zone corresponds to roughly how I subjectively thought my investment should look across countries. 
+
+This was mainly because a large portion (more than half) of the holdings were missing sector information. 
+
+The following is the resultant zone exposure.
+
+Zone  Exposure
+W0	0.10	
+W1	0.29	
+W2	0.16	
+W3	0.45	
+
+The zone W3 corresponds to mainly emerging market investments and given the heavy return expectations this is not particularly surprising. Reducing the target return will shift this balance to favour more equal allocation.
+
+
+```{r source_from_github_via_https}
+baseurl  <- 'https://raw.githubusercontent.com/emiruz/isharesPortfolio/master'
+source(file.path(baseurl, "data.R"))
+source(file.path(baseurl, "optimise.R"))
+```
+
+```{r more_fun_defs}
+getLabel <- function(a,b) paste(a,b,sep=".")
+
+getLabels <- function(a,b) {
+  r <- NULL
+  for(x in a) for(y in b) r <- c(r, getLabel(x,y))
+  r
+}
+
+getFreq <- function(n) {
+  if (n=="Quarterly") return(4)
+  if (n=="Semi-Annual") return(2)
+  if (n=="Monthly") return(12)
+  return(NA)
+}
+
+getNormalisedMonth <- function(d) {
+  x <- merge(d$keyfacts[,c("id","freq"),],d$dist[,c("id","month")], by="id", all=TRUE)
+  x <- aggregate(x$id, by=list(id=x$id,freq=x$freq,month=x$month),NROW)
+  x <- x[order(x$id,x$x, decreasing=TRUE),]
+  y <- unique(x[,c("id","freq")])
+  r <- NULL
+  for (i in 1:NROW(y)) r <- rbind(r, head(x[x$id==y[i,]$id,],y[i,]$freq))
+  r[,c("id","month")]
+}
+
+getEnhanced <- function(d) {
+  x <- aggregate(d$dist$dist, by=list(id=d$dist$id), mean)
+  names(x) <- c("id","dist")
+  d$keyfacts <- merge(d$keyfacts, x, by="id", all.x=TRUE)
+  d$keyfacts$dist <- d$keyfacts$dist/d$keyfacts$nav
+  d$keyfacts$freq <- unlist(lapply(d$keyfacts$freq, getFreq))
+  d
+}
+
+getCashflowMatrix <- function(d) {
+  d$holdings <- d$holdings[d$holdings$sector != "Cash and/or Derivatives",]
+  m <- matrix(0,nrow=NROW(unique(d$holdings$zone))*12, ncol=NROW(d$keyfacts))
+  colnames(m) <- d$keyfacts$id
+  rownames(m) <- getLabels(unique(d$holdings$zone), 1:12)
+  x <- aggregate(d$holdings$holding, by=list(id=d$holdings$id, zone=d$holdings$zone), sum)
+  x <- merge(x,d$keyfacts[,c("id","dist")], by="id", all=TRUE)
+  x$dist <- x$x * x$dist
+  x <- merge(getNormalisedMonth(d), x, by="id", all=TRUE)
+  m[cbind(getLabel(x$zone,x$month), x$id)] <- x$dist
+  m
+}
+
+printResults <- function(d,m,o,investment=100000) {
+  names(o) <- colnames(m)
+  print("INVESTMENTS")
+  print("------------------------------------------------")
+  y <- rowSums(t(t(m) * o))
+  o <- o[o > 0]
+  print(o)
+  y <- aggregate(as.vector(y), by=list(month=as.numeric(unlist(regmatches(names(y),regexpr("\\d+$",names(y)))))), sum)
+  y$monthly <- investment * y$x
+  y$cumulative <- cumsum(y$monthly)
+  y$x <- NULL
+  print("CASHFLOW")
+  print("------------------------------------------------")
+  print(y)
+  print("ZONE EXPOSURE")
+  print("------------------------------------------------")
+  h <- d$holdings[d$holdings$id %in% names(o),]
+  h <- aggregate(h$holding, by=list(id=h$id, zone=h$zone), sum)
+  h <- merge(h, data.frame(id=names(o), alloc=as.vector(o)), by="id",all.x=TRUE)
+  h$exposure <- h$x * h$alloc
+  h <- aggregate(h$exposure, by=list(zone=h$zone), sum)
+  h$exposure <- h$x
+  h$x <- NULL
+  print(h)
+}
+
+```
+
+```{r main}
+ids <- getProductURLS()
+d <- getProducts(ids)
+d <- getEnhanced(d)
+#d <- getEnhanced(getSavedData())
+m <- getCashflowMatrix(d)
+o <- getOptimisedWeights(m, 0.05)
+printResults(d,m,o,100000)
+```
+
+```{r}
+library(PortfolioAnalytics)
+
+```
+
+RStudio defines its own 
+`options("editor")` which is not completely compatible with R's 
+`option(editor="internal")`.  If you set `options(editor="internal")` in 
+RStudio then you can look at the code in the vignette.
+
+RStudio sets the "editor" option to a function that 
+requires a "name" argument, but file.edit doesn't provide one. 
+
+```{r, eval = FALSE}
+# vignette('portfolio_vignette', package = 'PortfolioAnalytics')
+# edit(vignette('portfolio_vignette', package = 'PortfolioAnalytics')[["file"]]) 
+# edit(vignette('portfolio_vignette', package = 'PortfolioAnalytics')) 
+edit(vignette("portfolio_vignette", package = "PortfolioAnalytics") , editor = "notepad")
+# edit(vignette("grobs",package="grid"),editor="notepad") 
+# edit(vignette("grobs",package = "grid")) 
+# edit.vignette(vignette("grobs",package = "grid"))
+
+```
