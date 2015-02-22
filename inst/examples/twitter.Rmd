@@ -20,17 +20,29 @@ When you click the **Knit** button a document will be generated that includes bo
 # library(devtools)
 # install_github("geoffjentry/twitteR")
 library(twitteR)
-library(plyr)
+library(dplyr)
+library("wordcloud")
+library("tm")
 ```
 
 ## Login to twitter
 <https://apps.twitter.com/app/7659862/keys>
 ```{r login to twitter}
-api_key <- "8OorW84H9NdgVY2R86DsnxZ4u"
-api_secret <- "KRxETy76qA4kt6GEwJD4bI4Jcq9FMgZAaKEaIr2SSYKFSXOyJM"
-access_token <- "45523367-8cePJieQl9psiEL6rd0MOhyQubu5TQ5ypXYNRLMro"
-access_token_secret <- "lH2drQ0Suv0zGKQmbpMyJmweR7PletI9bVx0LlCzKcdME"
-setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
+library(secure)
+secure::add_user("ttmmghmm", local_key())
+# secure::encrypt("twitter", consumer_api_key = "", consumer_api_secret = "", access_token = "", access_token_secret = "" )
+infoTwitter <- secure::decrypt("twitter")
+with(infoTwitter, setup_twitter_oauth(
+  consumer_key = consumer_api_key, 
+  consumer_secret = consumer_api_secret, 
+  access_token = access_token, 
+  access_secret = access_token_secret) 
+)
+#the cainfo parameter is necessary only on Windows
+r_stats <- searchTwitter("#Rstats", n=1500, cainfo="cacert.pem")
+#should get 1500
+length(r_stats)
+
 ```
 
 ```{r}

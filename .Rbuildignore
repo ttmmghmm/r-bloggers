@@ -3,3 +3,4 @@
 ^\.git.*$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.httr-oauth$
