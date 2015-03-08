@@ -5,6 +5,10 @@ date: "12/17/2014"
 output: slidy_presentation
 ---
 
+```{r echo=FALSE, results='asis', comment=''}
+cat("##", rmarkdown::metadata$title) #  R code that follows it prints the title as this sort of [second-level] header.
+```
+
 ## R Markdown
 
 This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
@@ -26,12 +30,14 @@ library("tm")
 ```
 
 ## Login to twitter
-<https://apps.twitter.com/app/7659862/keys>
+<http://davetang.org/muse/2013/04/06/using-the-r_twitter-package/>
 ```{r login to twitter}
+setwd("~/git/r-bloggers")
 library(secure)
-secure::add_user("ttmmghmm", local_key())
+# secure::add_user("ttmmghmm", local_key())
 # secure::encrypt("twitter", consumer_api_key = "", consumer_api_secret = "", access_token = "", access_token_secret = "" )
 infoTwitter <- secure::decrypt("twitter")
+print(str(infoTwitter))
 with(infoTwitter, setup_twitter_oauth(
   consumer_key = consumer_api_key, 
   consumer_secret = consumer_api_secret, 

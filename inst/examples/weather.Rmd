@@ -1,0 +1,40 @@
+---
+title: "weather"
+author: "ttmmghmm"
+date: "3/8/2015"
+output: html_document
+---
+
+
+# Getting daily/hourly weather from a local weather station
+* no login required.
+* **EGLC** is the four-letter code for London City airport.
+* <http://r-norberg.blogspot.co.uk/2015/03/getting-data-from-one-online-source.html>
+* <https://stats.stackexchange.com/questions/140163/timeseries-analysis-procedure-and-methods-using-r?newsletter=1&nlcode=357979%7c15ef> for using the `forecast` package to forecast a univariate timeseries.
+    * https://www.otexts.org/fpp/
+```{r}
+airportCode  <- c(ldnCity = "EGLC")
+baseURL <- 'http://www.wunderground.com/history/airport'
+suffixURL <- 'DailyHistory.html?HideSpecis=1&format=1'
+# todays date and from it produce a string having format year/month/day
+Date <- Sys.Date()
+datestring <- format(Date, '%Y/%m/%d')
+(url2fetch <- paste(baseURL, airportCode['ldnCity'], datestring, suffixURL, sep='/'))
+```
+
+```{r rcurl}
+library(RCurl)
+url_content <- getURL(url2fetch)
+```
+
+ every line of the data ends with an html newline (“<br />”) and a text newline (“\n”).
+ 
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+url_content <- gsub('<br />', '', url_content)
+```
+Finally I can “read” the data into a data.frame object with the help of read.csv() and textConnection().
+```{r}
+weather_data <- read.csv(textConnection(url_content))
+head(weather_data)
+```
