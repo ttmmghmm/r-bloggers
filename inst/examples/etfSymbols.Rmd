@@ -1,0 +1,41 @@
+
+```{r}
+y <- tempfile()
+# http://investexcel.net/all-yahoo-finance-stock-tickers/
+zipFile <- 'http://investexcel.net/wp-content/uploads/2013/12/Yahoo-Ticker-Symbols-Jan-2015.zip'
+download.file(url = zipFile, dest = y, quiet = FALSE)
+library(dplyr)
+library(readxl)
+etfs <- read_excel(file.path(dirname(y), "Yahoo Ticker Symbols - Jan 2015.xlsx")
+  ,  sheet = "ETF", skip = 3)
+library(stringr)
+etfs %>% 
+  filter(Exchange == 'LSE') %>% 
+  filter( str_detect(tolower(Name), 'ishares') ) -> 
+  isharesLse
+```
+
+```{r}
+library(quantmod)
+n <- 3
+str(tickers <- sample(ishares$Ticker, size = n))
+
+# tickers<-c("GLD","DBC", "EEM", "EFV","EFG","BND","TLT","SHY","IWF","IWD","IWC","IWO","IWN","VNQ")
+library(parallel)
+library(quantmod)
+getData <- function (symbols, ...) 
+  ### return list of symbol as xts, in _parallel_, if number of cores > 1.
+  structure( 
+    mclapply(symbols, function(x) getSymbols(x, auto.assign = FALSE, ...)),
+    names = symbols
+  )
+dat <- getData(head(tickers, n = -1)) # all tickers?
+#dat$GLD["2015-04"]
+datsapply
+str(head(dat, n = 2), max.level = 1)
+
+
+```
+
+
+> system.time({ df3 <- rbind.fill(listOfDataFrames) })
